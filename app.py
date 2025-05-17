@@ -1,67 +1,50 @@
+
 import streamlit as st
+import pandas as pd
 import cv2
 import numpy as np
-import pandas as pd
 from PIL import Image
 
-# Load color dataset (name, R, G, B)
+# Load color dataset
 @st.cache_data
 def load_colors():
-    url = "https://raw.githubusercontent.com/codebrainz/color-names/master/output/colors.csv"
-    color_data = pd.read_csv(url)
-    return color_data[['name', 'red', 'green', 'blue']]
+    csv_path = 'D:\\colors.csv'
+    return pd.read_csv(csv_path, names=["color", "color_name", "hex", "R", "G", "B"], header=None)
 
-# Function to find the closest color name
-def get_closest_color_name(r, g, b, color_data):
-    distances = np.sqrt((color_data['red'] - r)**2 + (color_data['green'] - g)**2 + (color_data['blue'] - b)**2)
-    closest_index = distances.idxmin()
-    return color_data.loc[closest_index, 'name']
+colors_df = load_colors()
 
-# Load image using OpenCV from uploaded file
-def load_image(image_file):
-    image = Image.open(image_file)
-    return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+# Function to get the closest color name
+def get_color_name(R, G, B):
+    minimum = float('inf')
+    cname = ""
+    for i in range(len(colors_df)):
+        d = abs(R - int(colors_df.loc[i, "R"])) + abs(G - int(colors_df.loc[i, "G"])) + abs(B - int(colors_df.loc[i, "B"]))
+        if d < minimum:
+            minimum = d
+            cname = colors_df.loc[i, "color_name"]
+    return cname
 
-# Streamlit UI
-st.title("🎨 Color Detection from Image")
+st.title("🎨 Color Detection App")
+st.write("Upload an image and click to get the nearest color name.")
 
-uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    color_data = load_colors()
-    image_bgr = load_image(uploaded_file)
-    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+    image = Image.open(uploaded_file)
+    image_np = np.array(image)
 
-    st.image(image_rgb, caption="Click on the image to detect color", use_column_width=True)
+    # Display the image
+    st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    # Get click coordinates
-    click = st.image(image_rgb, channels="RGB")
-
-    if 'clicked_point' not in st.session_state:
-        st.session_state.clicked_point = None
-
-    def handle_click(event):
-        st.session_state.clicked_point = (int(event.x), int(event.y))
-
-    st.markdown("**Click anywhere on the image above to detect a color.**")
-
-    coords = st.experimental_data_editor(
-        {"X": [""], "Y": [""]},
-        disabled=["X", "Y"],
-        key="coords",
-        num_rows="fixed",
-    )
-
-    x = st.number_input("X coordinate", min_value=0, max_value=image_rgb.shape[1]-1, step=1)
-    y = st.number_input("Y coordinate", min_value=0, max_value=image_rgb.shape[0]-1, step=1)
+    st.write("Click anywhere on the image to get color info (use coordinates):")
+    x = st.number_input("X Coordinate", min_value=0, max_value=image_np.shape[1]-1, value=0)
+    y = st.number_input("Y Coordinate", min_value=0, max_value=image_np.shape[0]-1, value=0)
 
     if st.button("Detect Color"):
-        r, g, b = image_rgb[y, x]
-        color_name = get_closest_color_name(r, g, b, color_data)
+        pixel = image_np[int(y), int(x)]
+        R, G, B = int(pixel[0]), int(pixel[1]), int(pixel[2]) if image_np.shape[2] == 3 else (0, 0, 0)
 
-        st.markdown(f"**Detected Color:** `{color_name}`")
-        st.markdown(f"**RGB:** ({r}, {g}, {b})")
-        st.markdown(
-            f"<div style='width:100px;height:50px;background-color:rgb({r},{g},{b});border:1px solid #000'></div>",
-            unsafe_allow_html=True,
-        )
+        color_name = get_color_name(R, G, B)
+        st.markdown(f"**Color Name**: {color_name}")
+        st.markdown(f"**RGB**: ({R}, {G}, {B})")
+        st.markdown(f"<div style='width:100px;height:50px;background-color:rgb({R},{G},{B});'></div>", unsafe_allow_html=True)
