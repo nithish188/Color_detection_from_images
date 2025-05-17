@@ -8,7 +8,7 @@ from PIL import Image
 # Load color dataset
 @st.cache_data
 def load_colors():
-    csv_path = 'D:\\colors.csv'
+    csv_path = 'colors.csv'
     return pd.read_csv(csv_path, names=["color", "color_name", "hex", "R", "G", "B"], header=None)
 
 colors_df = load_colors()
