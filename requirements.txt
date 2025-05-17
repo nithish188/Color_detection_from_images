@@ -3,5 +3,4 @@ opencv-python-headless
 pandas
 numpy
 Pillow
-opencv-python
 streamlit-image-coordinates
