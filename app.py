@@ -4,18 +4,14 @@ import numpy as np
 import cv2
 from streamlit_image_coordinates import image_coordinates
 from PIL import Image
-import os
 
-# Load color names CSV
+# Load color dataset
 @st.cache_data
 def load_colors():
-    csv_path = os.path.join(os.path.dirname(__file__), "colors.csv")
-    return pd.read_csv(csv_path, names=["color", "color_name", "hex", "R", "G", "B"], header=None)
+    return pd.read_csv("colors.csv", names=["color", "color_name", "hex", "R", "G", "B"], header=None)
 
-colors_df = load_colors()
-
-# Color matcher
-def get_color_name(R, G, B):
+# Find the closest color name
+def get_color_name(R, G, B, colors_df):
     minimum = float('inf')
     cname = ""
     for i in range(len(colors_df)):
@@ -25,23 +21,39 @@ def get_color_name(R, G, B):
             cname = colors_df.loc[i, "color_name"]
     return cname
 
-# Streamlit UI
-st.title("Color Detection from Image")
+# Load color data
+colors_df = load_colors()
 
+# UI
+st.title("🎨 Color Detection from Image")
+st.markdown("Upload an image and click anywhere on it to detect the color at that pixel.")
+
+# Upload image
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Click on the image", use_column_width=True)
-    
-    coords = image_coordinates("Click to detect color", image)
-    
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    opencv_image = cv2.imdecode(file_bytes, 1)  # Load with OpenCV
+    opencv_image_rgb = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+
+    # Convert to PIL for display
+    image_pil = Image.fromarray(opencv_image_rgb)
+
+    # Show image in Streamlit
+    coords = image_coordinates("Click on the image to detect color", image_pil)
+
     if coords:
         x, y = int(coords["x"]), int(coords["y"])
-        rgb = image.getpixel((x, y))
-        color_name = get_color_name(*rgb)
-        
-        st.markdown(f"**Coordinates:** ({x}, {y})")
-        st.markdown(f"**Detected Color:** `{color_name}`")
-        st.markdown(f"**RGB:** {rgb}")
-        st.color_picker("Detected Color Preview", value='#%02x%02x%02x' % rgb, label_visibility='collapsed', disabled=True)
+        height, width, _ = opencv_image_rgb.shape
+
+        if 0 <= x < width and 0 <= y < height:
+            b, g, r = opencv_image[y, x]
+            color_name = get_color_name(r, g, b, colors_df)
+
+            st.markdown(f"**Coordinates:** ({x}, {y})")
+            st.markdown(f"**Detected Color:** `{color_name}`")
+            st.markdown(f"**RGB (R,G,B):** ({r}, {g}, {b})")
+            hex_color = '#%02x%02x%02x' % (r, g, b)
+            st.color_picker("Color Preview", value=hex_color, label_visibility="collapsed", disabled=True)
+        else:
+            st.warning("Click inside the image boundaries.")
