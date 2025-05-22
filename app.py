@@ -1,38 +1,44 @@
 import streamlit as st
-from PIL import Image
+import cv2
+import numpy as np
 import pandas as pd
-from streamlit_image_coordinates import image_coordinates
+from utils import get_closest_color_name
 
-# Load the colors CSV
-@st.cache_data
-def load_colors():
-    return pd.read_csv("colors.csv", names=["color", "color_name", "hex", "R", "G", "B"], header=None)
+# Load color dataset
+colors_df = pd.read_csv("colors.csv")
 
-colors_df = load_colors()
+st.title("🎨 Color Detection from Images")
 
-# Find closest color name
-def get_color_name(R, G, B):
-    minimum = float('inf')
-    cname = None
-    for _, row in colors_df.iterrows():
-        d = abs(R - row.R) + abs(G - row.G) + abs(B - row.B)
-        if d < minimum:
-            minimum = d
-            cname = row.color_name
-    return cname
+uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
 
-st.title("Color Detection from Image")
+if uploaded_file is not None:
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    image = cv2.imdecode(file_bytes, 1)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
-if uploaded_file:
-    img = Image.open(uploaded_file)
-    coords = image_coordinates(img)
+    st.image(image, caption="Click on the image to detect colors", use_column_width=True)
 
-    if coords is not None:
-        x, y = coords["x"], coords["y"]
-        rgb = img.convert('RGB').getpixel((x, y))
-        color_name = get_color_name(*rgb)
+    clicked = st.image(image, use_column_width=True)
 
-        st.write(f"**Position:** ({x}, {y})")
-        st.write(f"**Detected Color:** {color_name}")
-        st.color_picker("Color Preview", value='#%02x%02x%02x' % rgb, disabled=True)
+    # Coordinate state
+    if "coords" not in st.session_state:
+        st.session_state.coords = None
+
+    def handle_click(x, y):
+        st.session_state.coords = (x, y)
+
+    # Handle mouse click on image
+    from streamlit_image_coordinates import image_coordinates
+    coords = image_coordinates(image)
+
+    if coords:
+        x, y = int(coords['x']), int(coords['y'])
+        b, g, r = image[y, x]
+        color_name = get_closest_color_name(r, g, b, colors_df)
+
+        st.markdown(f"### 📌 Detected Color: `{color_name}`")
+        st.write(f"RGB: ({r}, {g}, {b})")
+        st.markdown(
+            f"<div style='width:100px;height:50px;background-color:rgb({r},{g},{b});'></div>",
+            unsafe_allow_html=True
+        )
