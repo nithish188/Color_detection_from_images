@@ -3,4 +3,4 @@ streamlit-drawable-canvas
 opencv-python
 numpy
 pandas
-Pillow
+Pillow==11.3.0  
