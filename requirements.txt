@@ -1,6 +1,6 @@
-streamlit
-opencv-python
-pandas
-numpy
-Pillow
+streamlit==1.25.0
 streamlit-drawable-canvas
+opencv-python
+numpy
+pandas
+Pillow
