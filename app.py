@@ -1,44 +1,48 @@
 import streamlit as st
 import cv2
 import numpy as np
-import pandas as pd
-from utils import get_closest_color_name
+from PIL import Image
+from utils import load_colors, get_closest_color_name
 
-# Load color dataset
-colors_df = pd.read_csv("colors.csv")
+st.set_page_config(page_title="Color Detector", layout="centered")
+st.title("Color Detection from Image")
 
-st.title("🎨 Color Detection from Images")
+colors_df = load_colors()
 
-uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
-if uploaded_file is not None:
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    image = cv2.imdecode(file_bytes, 1)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    image_np = np.array(image)
 
-    st.image(image, caption="Click on the image to detect colors", use_column_width=True)
+    st.image(image, caption="Click on the image to detect color", use_column_width=True)
 
-    clicked = st.image(image, use_column_width=True)
+    click = st.image(image_np, use_column_width=True)
 
-    # Coordinate state
-    if "coords" not in st.session_state:
-        st.session_state.coords = None
+    # Capture mouse clicks using OpenCV window (for local dev only)
+    def click_event(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            b, g, r = image_np[y, x]
+            color_name = get_closest_color_name(r, g, b, colors_df)
+            st.session_state['selected_color'] = {
+                'rgb': (r, g, b),
+                'name': color_name
+            }
 
-    def handle_click(x, y):
-        st.session_state.coords = (x, y)
+    if st.button("Activate Click Detection"):
+        cv2.imshow("Image - Click to detect color", cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
+        cv2.setMouseCallback("Image - Click to detect color", click_event)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
-    # Handle mouse click on image
-    from streamlit_image_coordinates import image_coordinates
-    coords = image_coordinates(image)
-
-    if coords:
-        x, y = int(coords['x']), int(coords['y'])
-        b, g, r = image[y, x]
-        color_name = get_closest_color_name(r, g, b, colors_df)
-
-        st.markdown(f"### 📌 Detected Color: `{color_name}`")
-        st.write(f"RGB: ({r}, {g}, {b})")
+    if 'selected_color' in st.session_state:
+        r, g, b = st.session_state['selected_color']['rgb']
+        name = st.session_state['selected_color']['name']
+        st.markdown(f"**Detected Color:** `{name}`")
+        st.markdown(f"**RGB:** `{r}, {g}, {b}`")
         st.markdown(
-            f"<div style='width:100px;height:50px;background-color:rgb({r},{g},{b});'></div>",
+            f"<div style='width:100px; height:100px; background-color:rgb({r},{g},{b}); border:1px solid #000;'></div>",
             unsafe_allow_html=True
         )
+else:
+    st.info("Please upload an image to start color detection.")
