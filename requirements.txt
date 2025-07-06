@@ -1,5 +1,5 @@
 streamlit
-opencv-python
-numpy
 pandas
+numpy
 Pillow
+streamlit-drawable-canvas
