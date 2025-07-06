@@ -1,13 +1,16 @@
-# utils.py
+import pandas as pd
 
-def get_color_name(R, G, B, csv_data):
-    """Finds the closest color name by comparing RGB values."""
-    minimum = float('inf')
-    color_name = "Unknown"
-    for i in range(len(csv_data)):
-        d = abs(R - int(csv_data.loc[i, "R"])) + abs(G - int(csv_data.loc[i, "G"])) + abs(B - int(csv_data.loc[i, "B"]))
-        if d < minimum:
-            minimum = d
-            color_name = csv_data.loc[i, "color_name"]
-    return color_name
+# Load CSV dataset
+def load_colors(csv_path="colors.csv"):
+    return pd.read_csv(csv_path)
 
+# Find closest color name from the dataset
+def get_closest_color_name(R, G, B, colors_df):
+    min_dist = float("inf")
+    closest_name = ""
+    for _, row in colors_df.iterrows():
+        d = abs(R - int(row["R"])) + abs(G - int(row["G"])) + abs(B - int(row["B"]))
+        if d < min_dist:
+            min_dist = d
+            closest_name = row["color_name"]
+    return closest_name
