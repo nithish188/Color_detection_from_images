@@ -487,10 +487,11 @@ if not st.session_state.app_unlocked:
         line-height: 1.6;
         margin-bottom: 3rem;
     }
-    div.stButton {
+    [data-testid="stButton"] {
         display: flex;
         justify-content: center;
         width: 100%;
+        margin-top: 1rem;
     }
     .stButton > button {
         background: linear-gradient(135deg, #00d4aa, #0ea5e9) !important;
@@ -521,11 +522,9 @@ if not st.session_state.app_unlocked:
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1,1,1])
-    with col2:
-        if st.button("Enter Studio"):
-            st.session_state.app_unlocked = True
-            st.rerun()
+    if st.button("Enter Studio"):
+        st.session_state.app_unlocked = True
+        st.rerun()
     st.stop()
 
 colors_df = load_colors()
