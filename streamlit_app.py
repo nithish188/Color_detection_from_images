@@ -653,7 +653,7 @@ with st.container():
                                 "R": r, "G": g, "B": b,
                                 "X": x, "Y": y,
                             })
-                            st.experimental_rerun()
+                            st.rerun()
                     else:
                         st.warning("Click inside the image bounds.")
                 else:
