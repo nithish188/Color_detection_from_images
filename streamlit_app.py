@@ -487,6 +487,11 @@ if not st.session_state.app_unlocked:
         line-height: 1.6;
         margin-bottom: 3rem;
     }
+    div.stButton {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
     .stButton > button {
         background: linear-gradient(135deg, #00d4aa, #0ea5e9) !important;
         color: #07090f !important;
