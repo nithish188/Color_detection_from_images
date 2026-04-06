@@ -522,9 +522,11 @@ if not st.session_state.app_unlocked:
     </div>
     """, unsafe_allow_html=True)
     
-    if st.button("Enter Studio"):
-        st.session_state.app_unlocked = True
-        st.rerun()
+    col1, col2, col3 = st.columns([2, 1, 2])
+    with col2:
+        if st.button("Enter Studio", use_container_width=True):
+            st.session_state.app_unlocked = True
+            st.rerun()
     st.stop()
 
 colors_df = load_colors()
