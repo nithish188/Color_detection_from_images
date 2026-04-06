@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_drawable_canvas import st_canvas
+from streamlit_image_coordinates import streamlit_image_coordinates
 import numpy as np
 from PIL import Image
 import pandas as pd
@@ -565,22 +565,15 @@ with st.container():
                     Live Canvas — click a pixel
                 </div>""", unsafe_allow_html=True)
 
-                canvas_result = st_canvas(
-                    fill_color="rgba(0,0,0,0)",
-                    stroke_width=0,
-                    background_image=image,
-                    update_streamlit=True,
-                    height=image_np.shape[0],
-                    width=image_np.shape[1],
-                    drawing_mode="point",
+                value = streamlit_image_coordinates(
+                    image,
                     key="canvas",
                 )
 
             with res_col:
                 # ── Process click ─────────────────────────────────────────────
-                if canvas_result.json_data and len(canvas_result.json_data["objects"]) > 0:
-                    last_obj = canvas_result.json_data["objects"][-1]
-                    x, y = int(last_obj["left"]), int(last_obj["top"])
+                if value is not None:
+                    x, y = int(value["x"]), int(value["y"])
 
                     if 0 <= x < image_np.shape[1] and 0 <= y < image_np.shape[0]:
                         r = int(image_np[y, x, 0])
