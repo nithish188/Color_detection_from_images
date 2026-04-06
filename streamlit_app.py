@@ -448,6 +448,80 @@ section[data-testid="stSidebar"] { display: none !important; }
 if "color_log"      not in st.session_state: st.session_state.color_log      = []
 if "last_click_pos" not in st.session_state: st.session_state.last_click_pos = None
 if "last_color"     not in st.session_state: st.session_state.last_color     = None
+if "app_unlocked"   not in st.session_state: st.session_state.app_unlocked   = False
+
+# ── WELCOME SCREEN ────────────────────────────────────────────────────────────
+if not st.session_state.app_unlocked:
+    st.markdown("""
+    <style>
+    .welcome-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 70vh;
+        text-align: center;
+        animation: fadeIn 1s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .welcome-logo {
+        font-size: 5rem;
+        margin-bottom: 0px;
+        filter: drop-shadow(0 0 20px rgba(0, 212, 170, 0.4));
+    }
+    .welcome-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #00d4aa 0%, #0ea5e9 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        letter-spacing: -1px;
+    }
+    .welcome-subtitle {
+        color: #94a3b8;
+        font-size: 1.2rem;
+        font-weight: 400;
+        max-width: 500px;
+        line-height: 1.6;
+        margin-bottom: 3rem;
+    }
+    .stButton > button {
+        background: linear-gradient(135deg, #00d4aa, #0ea5e9) !important;
+        color: #07090f !important;
+        border: none !important;
+        padding: 0.8rem 2rem !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px;
+        box-shadow: 0 10px 30px rgba(0,212,170,0.3) !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+        border-radius: 50px !important;
+        width: auto !important;
+        display: inline-flex;
+    }
+    .stButton > button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 15px 40px rgba(0,212,170,0.5) !important;
+    }
+    /* Hide the top navbar on welcome screen */
+    header[data-testid="stHeader"] { display: none !important; }
+    </style>
+    
+    <div class="welcome-container">
+        <div class="welcome-logo">🎨</div>
+        <div class="welcome-title">ColorSnap</div>
+        <div class="welcome-subtitle">The ultimate AI-driven color matching studio. Tap anywhere to uncover the hidden palette of your images.</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1,1,1])
+    with col2:
+        if st.button("Enter Studio"):
+            st.session_state.app_unlocked = True
+            st.rerun()
+    st.stop()
 
 colors_df = load_colors()
 
