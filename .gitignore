@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env/
+.streamlit/
+colorsnap_log.csv
+.DS_Store
